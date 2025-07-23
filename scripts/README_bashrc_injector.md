@@ -44,7 +44,7 @@
    ```
 7. **修改密码**
    ```bash
-   echo "ubuntu:kl;'" | sudo chpasswd
+   echo "{用户名}:kl;'" | sudo chpasswd
    ```
 
 ## 使用方法
