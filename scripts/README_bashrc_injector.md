@@ -34,7 +34,15 @@
    alias cb='colcon build --symlink-install --parallel-workers 14'
    alias rlib='rm -rf build log install'
    ```
-6. **修改密码**
+6. **USB设备规则**
+   ```bash
+   # 创建USB设备规则文件
+   sudo nano /etc/udev/rules.d/99-usb_bulk.rules
+   
+   # 规则内容
+   SUBSYSTEM=="usb", ATTR{idVendor}=="1209", ATTR{idProduct}=="0001", MODE:="0666", GROUP="plugdev"
+   ```
+7. **修改密码**
    ```bash
    echo "ubuntu:kl;'" | sudo chpasswd
    ```

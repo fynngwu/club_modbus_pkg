@@ -79,6 +79,39 @@ backup_bashrc() {
     print_success "已备份bashrc文件到: $backup_file"
 }
 
+# 创建USB设备规则文件
+create_usb_rules() {
+    local rules_file="/etc/udev/rules.d/99-usb_bulk.rules"
+    local rules_content='SUBSYSTEM=="usb", ATTR{idVendor}=="1209", ATTR{idProduct}=="0001", MODE:="0666", GROUP="plugdev"'
+    
+    print_info "正在创建USB设备规则文件..."
+    
+    # 检查是否已经有规则文件
+    if [[ -f "$rules_file" ]]; then
+        print_warning "USB规则文件已存在: $rules_file"
+        print_info "是否要覆盖现有规则？(y/N)"
+        read -r response
+        if [[ ! "$response" =~ ^[Yy]$ ]]; then
+            print_info "跳过USB规则创建"
+            return 0
+        fi
+    fi
+    
+    # 创建规则文件
+    if sudo tee "$rules_file" > /dev/null <<< "$rules_content"; then
+        print_success "USB设备规则文件已创建: $rules_file"
+        print_info "正在重新加载udev规则..."
+        if sudo udevadm control --reload-rules && sudo udevadm trigger; then
+            print_success "udev规则已重新加载"
+        else
+            print_warning "udev规则重新加载失败，请手动执行: sudo udevadm control --reload-rules"
+        fi
+    else
+        print_error "创建USB规则文件失败"
+        return 1
+    fi
+}
+
 # 注入配置到bashrc
 inject_config() {
     local bashrc_file="$1"
@@ -121,6 +154,7 @@ show_injected_config() {
     echo "  - 历史自动同步"
     echo "  - colcon构建别名 (cb)"
     echo "  - 清理构建文件别名 (rlib)"
+    echo "  - USB设备规则 (/etc/udev/rules.d/99-usb_bulk.rules)"
 }
 
 # 主函数
@@ -155,6 +189,9 @@ main() {
     
     # 注入配置
     inject_config "$bashrc_file"
+    
+    # 创建USB设备规则
+    create_usb_rules
     
     # 显示结果
     show_injected_config
