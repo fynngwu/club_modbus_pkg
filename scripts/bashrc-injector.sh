@@ -58,12 +58,25 @@ check_bashrc() {
     fi
 }
 
+# 检查profile文件是否存在
+check_profile() {
+    local home_dir="$1"
+    local profile_file="$home_dir/.profile"
+    
+    if [[ ! -f "$profile_file" ]]; then
+        print_warning "profile文件不存在，正在创建..."
+        touch "$profile_file"
+        print_success "已创建profile文件: $profile_file"
+    fi
+}
+
 # 检查是否已经注入过配置
 check_already_injected() {
     local bashrc_file="$1"
+    local profile_file="$2"
     local marker="# bashrc-injector: 自动注入的配置"
     
-    if grep -q "$marker" "$bashrc_file" 2>/dev/null; then
+    if grep -q "$marker" "$bashrc_file" 2>/dev/null || grep -q "$marker" "$profile_file" 2>/dev/null; then
         return 0  # 已经注入过
     else
         return 1  # 没有注入过
@@ -77,6 +90,15 @@ backup_bashrc() {
     
     cp "$bashrc_file" "$backup_file"
     print_success "已备份bashrc文件到: $backup_file"
+}
+
+# 备份profile文件
+backup_profile() {
+    local profile_file="$1"
+    local backup_file="${profile_file}.backup.$(date +%Y%m%d_%H%M%S)"
+    
+    cp "$profile_file" "$backup_file"
+    print_success "已备份profile文件到: $backup_file"
 }
 
 # 创建USB设备规则文件
@@ -112,21 +134,40 @@ create_usb_rules() {
     fi
 }
 
-# 注入配置到bashrc
-inject_config() {
-    local bashrc_file="$1"
+# 注入环境变量配置到profile
+inject_profile_config() {
+    local profile_file="$1"
     
-    # 要注入的配置内容
-    cat >> "$bashrc_file" << 'EOF'
+    # 要注入到profile的配置内容（环境变量相关）
+    cat >> "$profile_file" << 'EOF'
 
 # bashrc-injector: 自动注入的配置
 # 注入时间: $(date)
 
-# 添加本地bin目录到PATH
-export PATH="$HOME/.local/bin:$PATH"
+# 添加本地bin目录到PATH (如果目录存在)
+if [ -d "$HOME/.local/bin" ] ; then
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+
+# bashrc-injector: 配置结束
+EOF
+
+    print_success "环境变量配置已成功注入到profile文件"
+}
+
+# 注入shell配置到bashrc
+inject_bashrc_config() {
+    local bashrc_file="$1"
+    local home_dir="$2"
+    
+    # 要注入到bashrc的配置内容（shell特定配置）
+    cat >> "$bashrc_file" << EOF
+
+# bashrc-injector: 自动注入的配置
+# 注入时间: $(date)
 
 # 初始化zoxide
-eval "$(zoxide init bash)"
+eval "\$(zoxide init bash)"
 
 # 在 Normal 模式下让 j/k 基于当前输入搜索历史
 bind  '"\e[A": history-search-backward'
@@ -136,30 +177,42 @@ bind  '"\e[B": history-search-forward'
 export PROMPT_COMMAND="history -a; history -c; history -r; _zoxide_hook"
 
 # 常用别名
-alias cb='colcon build --symlink-install --parallel-workers 14'
+alias cb='colcon build --symlink-install --parallel-workers 8'
 alias rlib='rm -rf build log install'
+alias vb='vim ~/.bashrc'
+alias sb='source ~/.bashrc'
+alias extract='$home_dir/club_driver_tool/scripts/auto_extract.sh'
 
 # bashrc-injector: 配置结束
 EOF
 
-    print_success "配置已成功注入到bashrc文件"
+    print_success "shell配置已成功注入到bashrc文件"
 }
 
 # 显示注入的配置
 show_injected_config() {
     print_info "已注入的配置包括："
-    echo "  - PATH环境变量配置"
-    echo "  - zoxide初始化"
-    echo "  - 历史搜索绑定 (j/k键)"
-    echo "  - 历史自动同步"
-    echo "  - colcon构建别名 (cb)"
-    echo "  - 清理构建文件别名 (rlib)"
-    echo "  - USB设备规则 (/etc/udev/rules.d/99-usb_bulk.rules)"
+    echo ""
+    echo "  📁 .profile 文件 (环境变量):"
+    echo "    - PATH环境变量配置"
+    echo ""
+    echo "  📁 .bashrc 文件 (shell配置):"
+    echo "    - zoxide初始化"
+    echo "    - 历史搜索绑定 (j/k键)"
+    echo "    - 历史自动同步"
+      echo "    - colcon构建别名 (cb)"
+  echo "    - 清理构建文件别名 (rlib)"
+  echo "    - 编辑bashrc别名 (vb)"
+  echo "    - 重新加载bashrc别名 (sb)"
+  echo "    - 自动提取脚本别名 (extract)"
+    echo ""
+    echo "  🔧 系统配置:"
+    echo "    - USB设备规则 (/etc/udev/rules.d/99-usb_bulk.rules)"
 }
 
 # 主函数
 main() {
-    print_info "开始bashrc配置注入..."
+    print_info "开始配置文件注入..."
     
     # 检查权限
     check_root
@@ -167,15 +220,18 @@ main() {
     # 获取主目录
     local home_dir=$(get_home_dir)
     local bashrc_file="$home_dir/.bashrc"
+    local profile_file="$home_dir/.profile"
     
     print_info "用户主目录: $home_dir"
     print_info "bashrc文件: $bashrc_file"
+    print_info "profile文件: $profile_file"
     
-    # 检查bashrc文件
+    # 检查配置文件
     check_bashrc "$home_dir"
+    check_profile "$home_dir"
     
     # 检查是否已经注入过
-    if check_already_injected "$bashrc_file"; then
+    if check_already_injected "$bashrc_file" "$profile_file"; then
         print_warning "检测到已经注入过配置，是否要重新注入？(y/N)"
         read -r response
         if [[ ! "$response" =~ ^[Yy]$ ]]; then
@@ -186,9 +242,11 @@ main() {
     
     # 备份原文件
     backup_bashrc "$bashrc_file"
+    backup_profile "$profile_file"
     
     # 注入配置
-    inject_config "$bashrc_file"
+    inject_profile_config "$profile_file"
+    inject_bashrc_config "$bashrc_file" "$home_dir"
     
     # 创建USB设备规则
     create_usb_rules
@@ -198,8 +256,9 @@ main() {
     
     print_success "配置注入完成！"
     print_info "请运行以下命令使配置生效："
+    echo "  source ~/.profile"
     echo "  source ~/.bashrc"
-    echo "  或者重新打开终端"
+    echo "  或者重新登录系统"
 }
 
 # 脚本入口
