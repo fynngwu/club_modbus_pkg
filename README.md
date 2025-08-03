@@ -1,6 +1,10 @@
 # 解压 LINUX.tar.gz 并配置TTY端口访问权限
 ```bash
 ros2 node list | awk '{print $1}' | grep -v '^/_ros2_daemon' | xargs -r -n1 ros2 node kill
+sudo add-apt-repository ppa:appimagelauncher-team/stable
+sudo apt update
+sudo apt install appimagelauncher
+
 ```
 
 ## 1. 解压 LINUX.tar.gz
