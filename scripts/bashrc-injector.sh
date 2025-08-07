@@ -178,11 +178,11 @@ export PROMPT_COMMAND="history -a; history -c; history -r; _zoxide_hook"
 
 # 常用别名
 alias cb='colcon build --symlink-install --parallel-workers 8'
+alias cbp='colcon build --symlink-install --parallel-workers 8 --packages-select'
 alias rlib='rm -rf build log install'
 alias vb='vim ~/.bashrc'
 alias sb='source ~/.bashrc'
-alias extract='$home_dir/club_driver_tool/scripts/auto_extract.sh'
-
+alias lidar='ros2 launch liv
 # bashrc-injector: 配置结束
 EOF
 

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <!-- 背景圆形 -->
+  <circle cx="24" cy="24" r="22" fill="#4285f4" stroke="#1976d2" stroke-width="2"/>
+  
+  <!-- 第一个标签页 -->
+  <rect x="8" y="12" width="16" height="20" rx="2" fill="#ffffff" stroke="#1976d2" stroke-width="1"/>
+  <rect x="8" y="12" width="16" height="4" rx="2" fill="#1976d2"/>
+  
+  <!-- 第二个标签页（克隆的） -->
+  <rect x="12" y="10" width="16" height="20" rx="2" fill="#ffffff" stroke="#1976d2" stroke-width="1"/>
+  <rect x="12" y="10" width="16" height="4" rx="2" fill="#1976d2"/>
+  
+  <!-- 复制图标 -->
+  <g transform="translate(18, 18)">
+    <rect x="0" y="0" width="12" height="12" fill="none" stroke="#1976d2" stroke-width="1.5"/>
+    <line x1="3" y1="3" x2="9" y2="3" stroke="#1976d2" stroke-width="1.5"/>
+    <line x1="3" y1="6" x2="9" y2="6" stroke="#1976d2" stroke-width="1.5"/>
+    <line x1="3" y1="9" x2="7" y2="9" stroke="#1976d2" stroke-width="1.5"/>
+  </g>
+</svg>
