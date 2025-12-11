@@ -1,19 +1,36 @@
 # 解压 LINUX.tar.gz 并配置TTY端口访问权限
 ```bash
-ros2 node list | awk '{print $1}' | grep -v '^/_ros2_daemon' | xargs -r -n1 ros2 node kill
-
-wget http://fishros.com/install -O fishros && . fishros
-sudo add-apt-repository ppa:appimagelauncher-team/stable
-sudo apt update
-sudo apt install appimagelauncher
-# 初始化zoxide
-eval "\$(zoxide init bash)"
-
 # 在 Normal 模式下让 j/k 基于当前输入搜索历史
 bind  '"\e[A": history-search-backward'
 bind  '"\e[B": history-search-forward'
+alias vb='vim ~/.bashrc'
+alias sb='source ~/.bashrc'
 
+cb() {
+    local args=(
+        --symlink-install
+        --parallel-workers $(nproc)
+        # --event-handlers console_direct+
+        # 可选：显式启用 Ninja（通常默认已启用）
+        # --cmake-args -G Ninja
+        --cmake-args
+        -G Ninja
+        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+        --continue-on-error
+        # --executor sequential # 防止CPU占用太高
+    )
 
+    if [ $# -gt 0 ]; then
+        args+=(--packages-up-to "$@")
+    fi
+
+    echo ">>> Running: colcon build ${args[*]}"
+    colcon build "${args[@]}"
+}
+wget http://fishros.com/install -O fishros && . fishros
+
+# 初始化zoxide
+eval "\$(zoxide init bash)"
 
 
 # 自动同步history
@@ -23,12 +40,16 @@ export PROMPT_COMMAND="history -a; history -c; history -r; _zoxide_hook"
 alias cb='colcon build --symlink-install --parallel-workers 8'
 alias cbp='colcon build --symlink-install --parallel-workers 8 --packages-select'
 alias rlib='rm -rf build log install'
-alias vb='vim ~/.bashrc'
-alias sb='source ~/.bashrc'
+
 alias lidar='ros2 launch livox_ros_driver2 rviz_MID360_launch.py'
 alias lid='ros2 launch livox_ros_driver2 msg_MID360_launch.py'
 alias fastlio='ros2 launch ros2 launch fast_lio mapping.launch.py'
 
+sudo add-apt-repository ppa:appimagelauncher-team/stable
+sudo apt update
+sudo apt install appimagelauncher
+
+ros2 node list | awk '{print $1}' | grep -v '^/_ros2_daemon' | xargs -r -n1 ros2 node kill
 
 source /opt/ros/humble/setup.bash
 source ~/ws_livox/install/setup.bash
