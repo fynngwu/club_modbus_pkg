@@ -30,7 +30,7 @@ cb() {
 wget http://fishros.com/install -O fishros && . fishros
 
 # 初始化zoxide
-eval "\$(zoxide init bash)"
+eval "$(zoxide init bash)"
 
 
 # 自动同步history
