@@ -8,14 +8,17 @@ alias sb='source ~/.bashrc'
 
 cb() {
     local args=(
-        --symlink-install
-        --parallel-workers $(nproc)
+        #--symlink-install
+        #--parallel-workers $(nproc)
         # --event-handlers console_direct+
         # 可选：显式启用 Ninja（通常默认已启用）
-        # --cmake-args -G Ninja
+        --continue-on-error
         --cmake-args
         -G Ninja
-        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache 
+        -DCMAKE_C_COMPILER_LAUNCHER=ccache
+        -DCMAKE_BUILD_TYPE=Release
+        -DBUILD_TESTING=OFF
         --continue-on-error
         # --executor sequential # 防止CPU占用太高
     )
@@ -35,7 +38,10 @@ eval "$(zoxide init bash)"
 
 # 自动同步history
 export PROMPT_COMMAND="history -a; history -c; history -r; _zoxide_hook"
-
+sudo fallocate -l 16G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
 # 常用别名
 alias cb='colcon build --symlink-install --parallel-workers 8'
 alias cbp='colcon build --symlink-install --parallel-workers 8 --packages-select'
