@@ -42,6 +42,7 @@ sudo fallocate -l 16G /swapfile
 sudo chmod 600 /swapfile
 sudo mkswap /swapfile
 sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 # 常用别名
 alias cb='colcon build --symlink-install --parallel-workers 8'
 alias cbp='colcon build --symlink-install --parallel-workers 8 --packages-select'
